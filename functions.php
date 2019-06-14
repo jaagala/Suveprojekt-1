@@ -70,7 +70,7 @@ function signup($firstName, $lastName, $email, $password){
 	$stmt ->close();
 	$mysqli->close();
   }
-	function upload($description, $dateFrom, $dateTo, $dateNotice){
+	function upload($description, $dateFrom, $dateTo){
 		global $tempFileName;
 		$notice ="";
 		$id = $_SESSION["userId"];
@@ -85,8 +85,8 @@ function signup($firstName, $lastName, $email, $password){
 			echo "Sellise nimega pilt on olemas.";
 		}else{
 			$stmt -> close();
-			$stmt = $mysqli->prepare("INSERT INTO failid (failinimi, algus, lopp, teavitus, kasutaja_id) VALUES(?,?,?,?,?)");
-			$stmt->bind_param("ssssi", $description, $dateFrom, $dateTo, $dateNotice, $id);
+			$stmt = $mysqli->prepare("INSERT INTO failid (failinimi, algus, lopp, kasutaja_id) VALUES(?,?,?,?)");
+			$stmt->bind_param("sssi", $description, $dateFrom, $dateTo, $id);
 			echo "teade: ".$mysqli->error;
 			$stmt->execute();
 			echo $stmt->error;
@@ -95,7 +95,9 @@ function signup($firstName, $lastName, $email, $password){
 		$mysqli->close();
 		return $notice;
 	}
-	function showupload($description, $dateFrom, $dateTo, $dateNotice){
+	function showupload($description, $dateFrom, $dateTo){
+		$sentence1 = "<style> td { color: orange; } </style>";
+		$sentence2 = "<style> td { color: red; } </style>";
 		$id = $_SESSION["userId"];
 		$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
 		if(isset($_POST["sort"])){
@@ -103,64 +105,74 @@ function signup($firstName, $lastName, $email, $password){
 			$criteria = $_POST["subject"];
 			if(isset($_POST["searchBox"])){
 				$search = $_POST["search"];
-				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp, teavitus FROM failid WHERE (kasutaja_id = $id AND failinimi LIKE '%$search%') ORDER BY $criteria $sort ");
+				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp FROM failid WHERE (kasutaja_id = $id AND failinimi LIKE '%$search%') ORDER BY $criteria $sort ");
 			} else {
-				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp, teavitus FROM failid WHERE kasutaja_id = $id ORDER BY $criteria $sort ");
+				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp FROM failid WHERE kasutaja_id = $id ORDER BY $criteria $sort ");
 			}
 		} else {
 			$sort = "DESC";
 			$criteria = "lopp";
 			if(isset($_POST["searchBox"])){
 				$search = $_POST["searchBox"];
-				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp, teavitus FROM failid WHERE (kasutaja_id = $id AND failinimi LIKE '%$search%') ORDER BY $criteria $sort ");
+				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp FROM failid WHERE (kasutaja_id = $id AND failinimi LIKE '%$search%') ORDER BY $criteria $sort ");
 			} else {
-				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp, teavitus FROM failid WHERE kasutaja_id = $id ORDER BY $criteria $sort ");
+				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp FROM failid WHERE kasutaja_id = $id ORDER BY $criteria $sort ");
 			}
 		}
 		$source = "uploads/".$description;
 		echo $mysqli->error;
-		$stmt->bind_result($photoId, $description, $dateFrom, $dateTo, $dateNotice);
+		$stmt->bind_result($photoId, $description, $dateFrom, $dateTo);
 		$stmt -> execute();
 		echo '<div class="photoRow" id="photoRow"> ';
 		echo "\n";
 		echo '<div class="photoColumn" id="photoColumn"> ';
 		echo "\n";
-		echo "<style> table tr,th,td { border: 1px solid black; width:10%;} \n";
+        echo "<style> table tr,th,td { color: black;  width:10%;font-family:Arial; background-color: #ffffff; border-bottom: 2px solid black;} \n";
 		echo "tr{ margin-left: 20px;} \n";
-		echo "td{ position: relative;} </style>";
+        echo "table{width:150%;text-align:center; font-size:18px; border-collapse:collapse; border: 3px solid black;} \n";
+        echo "th{background-color:  #FFA500 ; color: white;  border-bottom: 2px solid black;} </style>";
 		echo "<table>";
 		echo "<tr>";
 		echo "<th> Fail </th>";
 		echo "<th> Kirjeldus </th>";
 		echo "<th> Algus </th>";
 		echo "<th> Lõpp</th>";
-		echo "<th> Muuda </th>";
+		echo "<th> Aegumine </th>";
 		echo "<th> Kustuta </th>";
 		echo "</tr>";
 		while($stmt->fetch()){
 				$newFrom = date("d/m/Y", strtotime($dateFrom));
 				$newTo2 = date("d/m/Y", strtotime($dateTo));
-				$newNotice = date("d/m/Y", strtotime($dateNotice));
 				$fileExt = pathinfo($description)['extension'];
 				if($fileExt == "pdf"){
 					$source = '<a target="_blank" href="uploads/' .$description .'" type="application/pdf" > '.pathinfo($description)['filename'] .' </a>';
 				} else {
-					$source = '<img data-fn=' .$description .' class="photo" src="uploads/' .$description .'" data-id="' .$photoId .'" alt="' .pathinfo($description)['filename'] .'" style="height: 5vh">';
+					$source = '<img data-fn=' .$description .' class="photo" src="uploads/' .$description .'" data-id="' .$photoId .'" alt="' .pathinfo($description)['filename'] .'" style="height: 5vh; width: 10vh;">';
 				}
-				$delete = "<a href=deleteThisFile.php?id=" .$photoId ."&file=".$description ." class='deleteBtn' >X</a>";
+				$delete = "<a href=deleteThisFile.php?id=" .$photoId ."&file=".$description ." class='deleteBtn' >Kustuta</a>";
 				$update = "<a href=update.php?id=" .$photoId ."&file=" .$description ." class='updateBtn' >Redigeeri</a>";
 				$dateNow = date("Y-m-d");
 				$dateNow = date_create($dateNow);
-				$newTo = date_create($dateTo);
-				$dateDiff = date_diff($dateNow, $newTo);
+				$dateStart = date_create($dateFrom);
+				$dateEnd = date_create($dateTo);
+				$dateDiff = date_diff($dateStart, $dateEnd);
 				$hiddenData = "<input type='hidden' name='hiddenId' id='hiddenId' value =" .$photoId ."><input type='hidden' name='hiddenExt' id='hiddenExt' value=" .$fileExt ."><input type='hidden' name='hiddenName' value=" .$description .">";
+                $sentence1 = "<td > <p id='daysRemaining' style='color: red;' >" .$dateDiff->format('%a päeva') ."</p></td>";
+                $sentence2 = "<td > <p id='daysRemaining' style='color: yellow;' >" .$dateDiff->format('%a päeva') ."</p></td>";
+				$sentence3 = "<td > <p id='daysRemaining' >" .$dateDiff->format('%a päeva') ."</p></td>";
 				echo "<form action='myfiles.php' method='post' name='update'>";
 				echo "<tr>";
 				echo "<td> " .$source .$hiddenData ."</td>";
 				echo "<td> <input name='description' type='data' value='".pathinfo($description)['filename'] ."' class='dates'></td>";
 				echo "<td> <input name='dateFrom' type='data' value=" .$newFrom ." class='dates'></td>";
-				echo "<td> <input name='dateTo' type='data' value=" .$newTo2 ." class='dates'></td>";
-				echo "<td> " .$dateDiff->format('%a päeva') ." </td>";
+                echo "<td> <input name='dateTo' type='data' value=" .$newTo2 ." class='dates'></td>";
+                if($dateDiff->format('%a') <= 7){
+					echo $sentence1;
+				} elseif($dateDiff->format('%a') <= 14) {
+					echo $sentence2;
+				} else {
+					echo $sentence3;
+				}
 				echo "<td>  <input name='update' type='submit' value='Redigeeri'/>$delete</td>";
 				echo "</tr>";
 				echo "</form>";
@@ -173,11 +185,7 @@ function signup($firstName, $lastName, $email, $password){
 		if(empty($html)){
 			$html = "<p>Kahjuks pilte pole!</p> \n";
 		}
-		$stmt ->close();
-		$mysqli->close();
 	}
-
-
 	function deleteImage($fileToDelete){
 		$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
 		$stmt = $mysqli->prepare("DELETE FROM failid WHERE failinimi= '$fileToDelete'");
@@ -190,14 +198,6 @@ function signup($firstName, $lastName, $email, $password){
 		$stmt ->close();
 		$mysqli->close();
 	}
-	function test_input($data) {
-		//echo "Koristan!\n";
-		$data = trim($data);
-		$data = stripslashes($data);
-		$data = htmlspecialchars($data);
-		return $data;
-	}
-	
 	if(isset($_POST['update'])){
 		$updateFrom = $_POST['dateFrom'];
 		$updateTo = $_POST['dateTo'];
@@ -218,5 +218,10 @@ function signup($firstName, $lastName, $email, $password){
 		$newSrc = "uploads/" .$updateName;
 		rename($oldSrc, $newSrc);
 	}
-	?>
-
+	function test_input($data) {
+		//echo "Koristan!\n";
+		$data = trim($data);
+		$data = stripslashes($data);
+		$data = htmlspecialchars($data);
+		return $data;
+	}
