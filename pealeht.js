@@ -1,15 +1,22 @@
 /*jshint esversion: 6*/
 window.onload=function(){
-  openNav();
-  closeNav();
+    openNav();
+    closeNav();
 
 };
 
-function openNav() {
-  document.getElementById("mySidenav").style.width = "250px";
+  function openNav() {
   changeColorButton.addEventListener('click', changeBackgroundColor);
+  }
+  function closeNav() {
+    document.getElementById("mySidenav").style.width = "0";
+  }
 
-}
-function closeNav() {
-  document.getElementById("mySidenav").style.width = "0";
+function confirmDelete(){
+  modal.style.display = "none";
+  if(window.confirm('Kas tahate antud faili kustutada?')){
+    return true;
+  }
+  window.location.replace("myfiles.php");
+  return false;
 }

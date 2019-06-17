@@ -143,12 +143,13 @@ function signup($firstName, $lastName, $email, $password){
 				$newFrom = date("d/m/Y", strtotime($dateFrom));
 				$newTo2 = date("d/m/Y", strtotime($dateTo));
 				$fileExt = pathinfo($description)['extension'];
+				$confirm = "Kas te olete kindel?";
 				if($fileExt == "pdf"){
 					$source = '<a target="_blank" href="uploads/' .$description .'" type="application/pdf" > '.pathinfo($description)['filename'] .' </a>';
 				} else {
 					$source = '<img data-fn=' .$description .' class="photo" src="uploads/' .$description .'" data-id="' .$photoId .'" alt="' .pathinfo($description)['filename'] .'" style="height: 5vh; width: 10vh;">';
 				}
-				$delete = "<a href=deleteThisFile.php?id=" .$photoId ."&file=".$description ." class='deleteBtn' onclick='deleteConfirm()' ><img border='0' alt='Kustuta' src='delete_img.png' width='25px' height='25px'></a>";
+				$delete = "<a onclick='return confirmDelete()' href=deleteThisFile.php?id=" .$photoId ."&file=".$description ." class='deleteBtn' ><img border='0' alt='Kustuta' src='delete_img.png' width='25px' height='25px'></a>";
 				$dateNow = date("Y-m-d");
 				$dateNow = date_create($dateNow);
 				$dateEnd = date_create($dateTo);
@@ -217,7 +218,16 @@ function signup($firstName, $lastName, $email, $password){
 			$stmt -> bind_param("s", $updateName);
 			$stmt->execute();
 			if($stmt->fetch()){
-				echo "<script language='JavaScript' type='text/javascript' > alert('Sellise nimega fail on juba olemas.')</script>";
+				if($updateName == $_POST['description']  .".".$hiddenExt){	
+					$stmt -> close();
+					$stmt = $mysqli->prepare("UPDATE failid SET algus = '$updateFrom', lopp = '$updateTo' WHERE id = $toUpdate ");
+					echo $mysqli->error;
+					$stmt->execute();
+					$stmt->close();
+					$mysqli->close();
+				} else {
+					echo "<script language='JavaScript' type='text/javascript' > alert('Sellise nimega fail on juba olemas.')</script>";
+				}
 			} else {
 				$stmt -> close();
 				$stmt = $mysqli->prepare("UPDATE failid SET failinimi = '$updateName', algus = '$updateFrom', lopp = '$updateTo' WHERE id = $toUpdate ");
