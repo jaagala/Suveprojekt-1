@@ -209,22 +209,26 @@ function signup($firstName, $lastName, $email, $password){
 		$updateName = $_POST['description']  .".".$hiddenExt;
 		$hiddenName = $_POST['hiddenName'];
 		$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
-		$stmt = $mysqli ->prepare("SELECT failinimi FROM failid WHERE failinimi=?");
-		echo $mysqli->error;
-		$stmt -> bind_param("s", $updateName);
-		$stmt->execute();
-		if($stmt->fetch()){
-			echo "<script language='JavaScript' type='text/javascript' > alert('Sellise nimega fail on juba olemas.')</script>";
-		} else {
-			$stmt -> close();
-			$stmt = $mysqli->prepare("UPDATE failid SET failinimi = '$updateName', algus = '$updateFrom', lopp = '$updateTo' WHERE id = $toUpdate ");
+		if($_POST['description']==""){
+			echo "<script language='JavaScript' type='text/javascript' > alert('Faili nimi ei saa tühi olla.')</script>";
+		}else{
+			$stmt = $mysqli ->prepare("SELECT failinimi FROM failid WHERE failinimi=?");
 			echo $mysqli->error;
+			$stmt -> bind_param("s", $updateName);
 			$stmt->execute();
-			$stmt->close();
-			$mysqli->close();
-			$oldSrc = "uploads/" .$hiddenName;
-			$newSrc = "uploads/" .$updateName;
-			rename($oldSrc, $newSrc);
+			if($stmt->fetch()){
+				echo "<script language='JavaScript' type='text/javascript' > alert('Sellise nimega fail on juba olemas.')</script>";
+			} else {
+				$stmt -> close();
+				$stmt = $mysqli->prepare("UPDATE failid SET failinimi = '$updateName', algus = '$updateFrom', lopp = '$updateTo' WHERE id = $toUpdate ");
+				echo $mysqli->error;
+				$stmt->execute();
+				$stmt->close();
+				$mysqli->close();
+				$oldSrc = "uploads/" .$hiddenName;
+				$newSrc = "uploads/" .$updateName;
+				rename($oldSrc, $newSrc);
+			}
 		}
 	}
 	
