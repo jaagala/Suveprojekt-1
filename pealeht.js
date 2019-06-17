@@ -20,3 +20,14 @@ function confirmDelete(){
   window.location.replace("myfiles.php");
   return false;
 }
+
+function date(clicked_id){
+  var photoId = "photo" + clicked_id;
+  document.addEventListener("keyup", function (event) {
+    event.preventDefault();
+    if (event.keyCode === 13) {S
+      document.getElementById(photoId).submit();
+    }
+  });
+
+}
