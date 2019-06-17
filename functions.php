@@ -147,8 +147,7 @@ function signup($firstName, $lastName, $email, $password){
 				} else {
 					$source = '<img data-fn=' .$description .' class="photo" src="uploads/' .$description .'" data-id="' .$photoId .'" alt="' .pathinfo($description)['filename'] .'" style="height: 5vh; width: 10vh;">';
 				}
-				$delete = "<a href=deleteThisFile.php?id=" .$photoId ."&file=".$description ." class='deleteBtn' >Kustuta</a>";
-				$update = "<a href=update.php?id=" .$photoId ."&file=" .$description ." class='updateBtn' >Redigeeri</a>";
+				$delete = "<a href=deleteThisFile.php?id=" .$photoId ."&file=".$description ." class='deleteBtn' ><img border='0' alt='Kustuta' src='delete_img.png' width='25px' height='25px'></a>";
 				$dateNow = date("Y-m-d");
 				$dateNow = date_create($dateNow);
 				$dateEnd = date_create($dateTo);
@@ -170,7 +169,7 @@ function signup($firstName, $lastName, $email, $password){
 				} else {
 					echo $sentence3;
 				}
-				echo "<td>  <input name='update' type='submit' value='Redigeeri'/>$delete</td>";
+				echo "<td>  <input name='update' type='hidden' value='Redigeeri'/>$delete</td>";
 				echo"</tr>";
 				echo "</form>";
 				echo '</div>';
@@ -183,6 +182,7 @@ function signup($firstName, $lastName, $email, $password){
 			$html = "<p>Kahjuks pilte pole!</p> \n";
 		}
 	}
+	
 	function deleteImage($fileToDelete){
 		$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
 		$stmt = $mysqli->prepare("DELETE FROM failid WHERE failinimi= '$fileToDelete'");
