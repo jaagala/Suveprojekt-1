@@ -95,6 +95,7 @@ function signup($firstName, $lastName, $email, $password){
 		$mysqli->close();
 		return $notice;
 	}
+
 	function showupload($description, $dateFrom, $dateTo){
 		$id = $_SESSION["userId"];
 		$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
@@ -147,7 +148,7 @@ function signup($firstName, $lastName, $email, $password){
 				} else {
 					$source = '<img data-fn=' .$description .' class="photo" src="uploads/' .$description .'" data-id="' .$photoId .'" alt="' .pathinfo($description)['filename'] .'" style="height: 5vh; width: 10vh;">';
 				}
-				$delete = "<a href=deleteThisFile.php?id=" .$photoId ."&file=".$description ." class='deleteBtn' ><img border='0' alt='Kustuta' src='delete_img.png' width='25px' height='25px'></a>";
+				$delete = "<a href=deleteThisFile.php?id=" .$photoId ."&file=".$description ." class='deleteBtn' onclick='deleteConfirm()' ><img border='0' alt='Kustuta' src='delete_img.png' width='25px' height='25px'></a>";
 				$dateNow = date("Y-m-d");
 				$dateNow = date_create($dateNow);
 				$dateEnd = date_create($dateTo);
@@ -182,7 +183,7 @@ function signup($firstName, $lastName, $email, $password){
 			$html = "<p>Kahjuks pilte pole!</p> \n";
 		}
 	}
-	
+
 	function deleteImage($fileToDelete){
 		$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
 		$stmt = $mysqli->prepare("DELETE FROM failid WHERE failinimi= '$fileToDelete'");
@@ -195,7 +196,12 @@ function signup($firstName, $lastName, $email, $password){
 		$stmt ->close();
 		$mysqli->close();
 	}
+
 	if(isset($_POST['update'])){
+		update();
+	}
+
+	function update(){
 		$updateFrom = $_POST['dateFrom'];
 		$updateTo = $_POST['dateTo'];
 		$hiddenExt = $_POST['hiddenExt'];
@@ -203,15 +209,25 @@ function signup($firstName, $lastName, $email, $password){
 		$updateName = $_POST['description']  .".".$hiddenExt;
 		$hiddenName = $_POST['hiddenName'];
 		$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
-		$stmt = $mysqli->prepare("UPDATE failid SET failinimi = '$updateName', algus = '$updateFrom', lopp = '$updateTo' WHERE id = $toUpdate ");
+		$stmt = $mysqli ->prepare("SELECT failinimi FROM failid WHERE failinimi=?");
 		echo $mysqli->error;
+		$stmt -> bind_param("s", $updateName);
 		$stmt->execute();
-		$stmt->close();
-		$mysqli->close();
-		$oldSrc = "uploads/" .$hiddenName;
-		$newSrc = "uploads/" .$updateName;
-		rename($oldSrc, $newSrc);
+		if($stmt->fetch()){
+			echo "<script language='JavaScript' type='text/javascript' > alert('Sellise nimega fail on juba olemas.')</script>";
+		} else {
+			$stmt -> close();
+			$stmt = $mysqli->prepare("UPDATE failid SET failinimi = '$updateName', algus = '$updateFrom', lopp = '$updateTo' WHERE id = $toUpdate ");
+			echo $mysqli->error;
+			$stmt->execute();
+			$stmt->close();
+			$mysqli->close();
+			$oldSrc = "uploads/" .$hiddenName;
+			$newSrc = "uploads/" .$updateName;
+			rename($oldSrc, $newSrc);
+		}
 	}
+	
 	function test_input($data) {
 		//echo "Koristan!\n";
 		$data = trim($data);
