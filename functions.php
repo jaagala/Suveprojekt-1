@@ -5,6 +5,7 @@ $database = "if18_andri_ka_1";
 session_start();
 function signin($email, $password){
 	$notice = "";
+	$email = mysql_real_escape_string($email);
 	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
 	$stmt = $mysqli->prepare("SELECT id, firstname, email, password FROM kasutajad WHERE email=?");
 	echo $mysqli->error;
@@ -45,6 +46,7 @@ function signin($email, $password){
   }//sisselogimine lõppeb
 function signup($firstName, $lastName, $email, $password){
 	$notice = "";
+	$email = mysql_real_escape_string($email);
 	$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
 	//kontrollime, ega kasutajat juba olemas pole
 	$stmt = $mysqli->prepare("SELECT id FROM kasutajad WHERE email=?");
@@ -56,6 +58,9 @@ function signup($firstName, $lastName, $email, $password){
 		$notice = "Sellise kasutajatunnusega (" .$email .") kasutaja on juba olemas! Uut kasutajat ei salvestatud!";
 	} else {
 		$stmt->close();
+		$firstName = mysql_real_escape_string($firstName);
+		$lastName = mysql_real_escape_string($lastName);
+		$email = mysql_real_escape_string($email);
 		$stmt = $mysqli->prepare("INSERT INTO kasutajad (firstname, lastname, email, counter, password) VALUES(?,?,?,1, ?)");
     	echo $mysqli->error;
 	    $options = ["cost" => 12, "salt" => substr(sha1(rand()), 0, 22)];
@@ -78,6 +83,7 @@ function signup($firstName, $lastName, $email, $password){
 		$notice = "";
 		$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
 		//kontroll, kas fail on juba olems
+		$description = mysql_real_escape_string($mysql_real_escape_string);
 		$stmt = $mysqli ->prepare("SELECT failinimi FROM failid WHERE failinimi=?");
 		echo $mysqli->error;
 		$stmt -> bind_param("s", $description);
@@ -86,6 +92,7 @@ function signup($firstName, $lastName, $email, $password){
 			echo "Sellise nimega pilt on olemas.";
 		}else{
 			$stmt -> close();
+			$description = mysql_real_escape_string($description);
 			$stmt = $mysqli->prepare("INSERT INTO failid (failinimi, algus, lopp, kasutaja_id) VALUES(?,?,?,?)");
 			$stmt->bind_param("sssi", $description, $dateFrom, $dateTo, $id);
 			echo "teade: ".$mysqli->error;
@@ -147,7 +154,6 @@ function signup($firstName, $lastName, $email, $password){
 				$confirm = "Kas te olete kindel?";
 				if($fileExt == "pdf"){
 					$source = '<a target="_blank" href="uploads/' .$description .'" type="application/pdf" onclick="setTimeout(waitFunc, 100)"><img border="0" alt=' .$description .' src="pdf.png" width="50px" heigth="25px" ></a>';
-					echo "<script language='JavaScript' type='text/javascript' > </script>";
 				} else {
 					setlocale(LC_ALL, 'en_US.UTF-8');
 					$source = '<img data-fn=' .$description .' class="photo" src="uploads/' .$description .'" id="' .$photoId .'" alt="' .pathinfo($description)['filename'] .'" style="height: 5vh; width: 10vh;">';
@@ -191,6 +197,7 @@ function signup($firstName, $lastName, $email, $password){
 
 	function deleteImage($fileToDelete){
 		$mysqli = new mysqli($GLOBALS["serverHost"], $GLOBALS["serverUsername"], $GLOBALS["serverPassword"], $GLOBALS["database"]);
+		$fileToDelete = mysql_real_escape_string($fileToDelete);
 		$stmt = $mysqli->prepare("DELETE FROM failid WHERE failinimi= '$fileToDelete'");
 		echo $mysqli->error;
 		if($stmt -> execute()){
