@@ -29,5 +29,8 @@ function date(clicked_id){
       document.getElementById(photoId).submit();
     }
   });
+}
 
+function waitFunc(){
+  modal.style.display = "none";
 }

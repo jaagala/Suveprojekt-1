@@ -1,5 +1,6 @@
 <?php
 require ("../../../config.php");
+header('Content-Type: text/html; charset=utf-8');
 $database = "if18_andri_ka_1";
 session_start();
 function signin($email, $password){
@@ -104,18 +105,18 @@ function signup($firstName, $lastName, $email, $password){
 			$criteria = $_POST["subject"];
 			if(isset($_POST["searchBox"])){
 				$search = $_POST["search"];
-				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp FROM failid WHERE (kasutaja_id = $id AND failinimi LIKE '%$search%') ORDER BY $criteria $sort ");
+				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp FROM failid WHERE (kasutaja_id = $id AND failinimi LIKE '%$search%') ORDER BY $criteria $sort");
 			} else {
-				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp FROM failid WHERE kasutaja_id = $id ORDER BY $criteria $sort ");
+				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp FROM failid WHERE kasutaja_id = $id ORDER BY $criteria $sort");
 			}
 		} else {
 			$sort = "DESC";
 			$criteria = "lopp";
 			if(isset($_POST["searchBox"])){
 				$search = $_POST["searchBox"];
-				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp FROM failid WHERE (kasutaja_id = $id AND failinimi LIKE '%$search%') ORDER BY $criteria $sort ");
+				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp FROM failid WHERE (kasutaja_id = $id AND failinimi LIKE '%$search%') ORDER BY $criteria $sort");
 			} else {
-				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp FROM failid WHERE kasutaja_id = $id ORDER BY $criteria $sort ");
+				$stmt = $mysqli->prepare("SELECT id, failinimi, algus, lopp FROM failid WHERE kasutaja_id = $id ORDER BY $criteria $sort");
 			}
 		}
 		$source = "uploads/".$description;
@@ -145,8 +146,10 @@ function signup($firstName, $lastName, $email, $password){
 				$fileExt = pathinfo($description)['extension'];
 				$confirm = "Kas te olete kindel?";
 				if($fileExt == "pdf"){
-					$source = '<a target="_blank" href="uploads/' .$description .'" type="application/pdf" > '.pathinfo($description)['filename'] .' </a>';
+					$source = '<a target="_blank" href="uploads/' .$description .'" type="application/pdf" onclick="setTimeout(waitFunc, 100)"><img border="0" alt=' .$description .' src="pdf.png" width="50px" heigth="25px" ></a>';
+					echo "<script language='JavaScript' type='text/javascript' > </script>";
 				} else {
+					setlocale(LC_ALL, 'en_US.UTF-8');
 					$source = '<img data-fn=' .$description .' class="photo" src="uploads/' .$description .'" id="' .$photoId .'" alt="' .pathinfo($description)['filename'] .'" style="height: 5vh; width: 10vh;">';
 				}
 				$delete = "<a onclick='return confirmDelete()' href=deleteThisFile.php?id=" .$photoId ."&file=".$description ." class='deleteBtn' ><img border='0' alt='Kustuta' src='delete_img.png' width='25px' height='25px'></a>";
@@ -161,6 +164,7 @@ function signup($firstName, $lastName, $email, $password){
 				echo "<form action='myfiles.php' method='post' name='update' id='photo" .$photoId ."'>";
 				echo "<tr>";
 				echo "<td> " .$source .$hiddenData ."</td>";
+				setlocale(LC_ALL, 'en_US.UTF-8');
 				echo "<td> <input name='description' type='data' value='".pathinfo($description)['filename'] ."' class='dates'></td>";
 				echo "<td> <input onClick='date(this.id)' name='dateFrom' type='date' value=" .$dateFrom ." id=" .$photoId ." class='dates'></td>";
 				echo "<td> <input onClick='date(this.id)' name='dateTo' type='date' value=" .$dateTo ." id=" .$photoId ." class='dates'></td>";
@@ -220,24 +224,32 @@ function signup($firstName, $lastName, $email, $password){
 			if($stmt->fetch()){
 				if($updateName == $_POST['description']  .".".$hiddenExt){	
 					$stmt -> close();
-					$stmt = $mysqli->prepare("UPDATE failid SET algus = '$updateFrom', lopp = '$updateTo' WHERE id = $toUpdate ");
-					echo $mysqli->error;
-					$stmt->execute();
-					$stmt->close();
-					$mysqli->close();
+					if($updateFrom > $updateTo){
+						echo "<script language='JavaScript' type='text/javascript' > alert('Lõpukuupäev ei saa olla alguse kuupäevast varem.')</script>";
+					}else{
+						$stmt = $mysqli->prepare("UPDATE failid SET algus = '$updateFrom', lopp = '$updateTo' WHERE id = $toUpdate ");
+						echo $mysqli->error;
+						$stmt->execute();
+						$stmt->close();
+						$mysqli->close();
+					}
 				} else {
 					echo "<script language='JavaScript' type='text/javascript' > alert('Sellise nimega fail on juba olemas.')</script>";
 				}
 			} else {
 				$stmt -> close();
-				$stmt = $mysqli->prepare("UPDATE failid SET failinimi = '$updateName', algus = '$updateFrom', lopp = '$updateTo' WHERE id = $toUpdate ");
-				echo $mysqli->error;
-				$stmt->execute();
-				$stmt->close();
-				$mysqli->close();
-				$oldSrc = "uploads/" .$hiddenName;
-				$newSrc = "uploads/" .$updateName;
-				rename($oldSrc, $newSrc);
+				if($updateFrom > $updateTo){
+					echo "<script language='JavaScript' type='text/javascript' > alert('Lõpukuupäev ei saa olla alguse kuupäevast varem.')</script>";	
+				}else{
+					$stmt = $mysqli->prepare("UPDATE failid SET failinimi = '$updateName', algus = '$updateFrom', lopp = '$updateTo' WHERE id = $toUpdate ");
+					echo $mysqli->error;
+					$stmt->execute();
+					$stmt->close();
+					$mysqli->close();
+					$oldSrc = "uploads/" .$hiddenName;
+					$newSrc = "uploads/" .$updateName;
+					rename($oldSrc, $newSrc);
+				}
 			}
 		}
 	}
